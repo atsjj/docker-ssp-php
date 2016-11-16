@@ -1,0 +1,74 @@
+#!/bin/sh
+set -e
+
+dir=/var/www
+hosted=$dir/slideshow-pro-director
+data=$dir/slideshow-pro-director-data
+mirror=$hosted-mirror
+basePath=$hosted/config
+appPath=$hosted/app/config
+conf=conf.php
+core=core.php
+userSetup=user_setup.php
+
+usage() {
+  echo "usage: $0 COMMAND"
+  echo
+  echo "Manage slideshow-pro-director."
+  echo
+  echo "Commands:"
+  echo "   install  bootstraps your mounted volumes to contain default media."
+  echo "   start    run php-fpm."
+  echo
+}
+
+case "$1" in
+  install)
+    cp -R $mirror/album-audio $data
+    cp -R $mirror/albums $data
+    cp -R $mirror/xml_cache $data
+    cp -R $mirror/app/tmp $data
+
+    ln -sfn $data/albums $hosted/albums
+    ln -sfn $data/album-audio $hosted/album-audio
+    ln -sfn $data/tmp $hosted/app/tmp
+    ln -sfn $data/xml_cache $hosted/xml_cache
+
+    chown -R www-data:www-data $data
+    chown -h www-data:www-data $hosted/albums
+    chown -h www-data:www-data $hosted/album-audio
+    chown -h www-data:www-data $hosted/app/tmp
+    chown -h www-data:www-data $hosted/xml_cache
+
+    exit 0
+    ;;
+
+  start)
+    shift
+
+    envsubst '\
+      \$MYSQL_HOST \
+      \$MYSQL_DATABASE \
+      \$MYSQL_USER \
+      \$MYSQL_PASSWORD \
+      \$MYSQL_TABLE_PREFIX \
+      \$MYSQL_ENCODING' < $basePath/$conf.template > $basePath/$conf
+
+    envsubst '\
+      \$SSP_SALT' < $basePath/$userSetup.template > $basePath/$userSetup
+
+    envsubst '\
+      \$MYSQL_TABLE_PREFIX \
+      \$SSP_CACHE_ENGINE \
+      \$SSP_CACHE_MEMCACHE \
+      \$SSP_SALT' < $appPath/$core.template > $appPath/$core
+
+    exec php-fpm "$@"
+    exit 0
+    ;;
+
+  *)
+    usage
+    exit 1
+    ;;
+esac
