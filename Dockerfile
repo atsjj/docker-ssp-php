@@ -122,6 +122,7 @@ RUN set -ex \
     echo 'pm.max_spare_servers = 3'; \
     echo 'access.log = /proc/self/fd/2'; \
     echo 'catch_workers_output = yes'; \
+    echo 'php_admin_flag[expose_php] = off'; \
     echo 'php_value[post_max_size] = 1024M'; \
     echo 'php_value[upload_max_filesize] = 1024M'; \
   } | tee php-fpm.conf \
