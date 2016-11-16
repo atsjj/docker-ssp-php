@@ -174,7 +174,7 @@ RUN set -ex \
     echo '      "engine" => "Memcache",'; \
     echo '      "servers" => array("${SSP_CACHE_MEMCACHE}")'; \
     echo '    ));'; \
-    echo '  } else {' \
+    echo '  } else {'; \
     echo '    Cache::config("default", array("engine" => "File"));'; \
     echo '  }'; \
     echo '?>'; \
